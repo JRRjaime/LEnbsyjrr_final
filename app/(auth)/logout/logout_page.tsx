@@ -1,3 +1,4 @@
+// app/(auth)/logout/page.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -8,10 +9,19 @@ export default function LogoutPage() {
   const router = useRouter();
 
   useEffect(() => {
+    let alive = true;
     (async () => {
-      await supabase.auth.signOut();
-      router.replace("/");
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        // no-op
+      } finally {
+        if (alive) router.replace("/login");
+      }
     })();
+    return () => {
+      alive = false;
+    };
   }, [router]);
 
   return <p className="p-8">Cerrando sesión...</p>;
