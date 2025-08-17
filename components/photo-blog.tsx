@@ -73,24 +73,24 @@ export function PhotoBlog() {
 
   // Cargar fotos guardadas en IndexedDB al montar
   useEffect(() => {
-  let mounted = true;
-  (async () => {
+  let mounted = true
+  ;(async () => {
     try {
-      const loaded = await loadAllPhotos();
-      const list = Array.isArray(loaded) ? loaded : [];
-      if (mounted && list.length) setPhotos(list);
+      const loaded = await loadAllPhotos()
+      const list = Array.isArray(loaded) ? loaded : []
+      if (mounted && list.length) setPhotos(list)
     } catch (err) {
-      console.error("loadAllPhotos failed:", err);
+      console.error("loadAllPhotos failed:", err)
     }
-  })();
-  return () => { mounted = false; };
+  })()
+  return () => { mounted = false }
 }, [])
 
   const filteredPhotos = useMemo(() => {
     const byCategory = selectedCategory === "all" ? photos : photos.filter((p) => p.category === selectedCategory)
     const byTags = selectedTags.length
-    ? byCategory.filter((p) => selectedTags.every((t) => (p.tags ?? []).includes(t)))
-    : byCategory
+      ? byCategory.filter((p) => selectedTags.every((t) => (p.tags ?? []).includes(t)))
+      : byCategory
     const q = query.trim().toLowerCase()
     if (!q) return byTags
     return byTags.filter(

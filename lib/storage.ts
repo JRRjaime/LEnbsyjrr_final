@@ -1,4 +1,4 @@
-// lib/storage.ts
+// lib/storage.ts (patched, fixed for Vercel build)
 import { supabase } from "./supabaseClient";
 
 export type SaveData = {
@@ -27,7 +27,7 @@ function safeExt(name: string): string {
   return ["jpg", "jpeg", "png", "webp", "gif", "avif", "heic"].includes(ext) ? ext : "jpg";
 }
 
-// Dev-friendly: no rompas si no hay sesión; devuelve null (modo anónimo)
+// Dev-friendly: no lances si no hay sesión; devuelve null (modo anónimo)
 async function getUserIdOrNull(): Promise<string | null> {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
@@ -118,25 +118,16 @@ export async function savePhotoWithBlob(data: SaveData, file: Blob, userId?: str
 }
 
 export async function loadAllPhotos(): Promise<DBPhoto[]> {
-  try {
-    const { data, error } = await supabase
-      .from("photos")
-      .select("id, url, image_url, user_id, title, description, category, tags, created_at")
-      .order("created_at", { ascending: false });
-    if (error) {
-      console.error("Supabase loadAllPhotos:", error.message, error.details, error.hint);
-      return [];
-    }
-    return (data ?? []).map((p: any) => ({
-      ...p,
-      image_url: p.image_url ?? p.url,
-      url: p.url ?? p.image_url,
-      tags: Array.isArray(p.tags) ? p.tags : [],
-    }));
-  } catch (e) {
-    console.error("loadAllPhotos exception:", e);
-    return [];
-  }
+  const { data, error } = await supabase
+    .from("photos")
+    .select("id, url, image_url, user_id, title, description, category, tags, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((p: any) => ({
+    ...p,
+    image_url: p.image_url ?? p.url,
+    url: p.url ?? p.image_url,
+  }));
 }
 
 export async function loadPhotoById(id: string): Promise<DBPhoto | null> {
@@ -151,7 +142,6 @@ export async function loadPhotoById(id: string): Promise<DBPhoto | null> {
     ...data,
     image_url: data.image_url ?? data.url,
     url: data.url ?? data.image_url,
-    tags: Array.isArray((data as any).tags) ? (data as any).tags : [],
   };
 }
 
@@ -168,7 +158,7 @@ export async function removePhoto(photoId: string) {
   if (!data) throw new Error("Foto no encontrada.");
   if (data.user_id !== uid) throw new Error("No puedes borrar fotos de otros usuarios.");
 
-  const fileUrl = (data as any).image_url ?? (data as any).url;
+  const fileUrl = data.image_url ?? data.url;
   const path = fileUrl ? pathFromPublicUrl(fileUrl) : null;
   if (!path) throw new Error("No se pudo resolver la ruta en el bucket.");
 
