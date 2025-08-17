@@ -1,4 +1,4 @@
-\/\/ lib/storage.ts (patched)
+// lib/storage.ts (patched, fixed for Vercel build)
 import { supabase } from "./supabaseClient";
 
 export type SaveData = {
@@ -31,10 +31,10 @@ function safeExt(name: string): string {
 async function getUserIdOrNull(): Promise<string | null> {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
-    if ((error as any)?.name === "AuthSessionMissingError" || /Auth session missing/i.test(String(error.message))) {
+    const msg = String((error as any)?.message || "");
+    if ((error as any)?.name === "AuthSessionMissingError" || /Auth session missing/i.test(msg)) {
       return null;
     }
-    // Otros errores sí se propagan
     throw error;
   }
   return data.user?.id ?? null;
@@ -57,7 +57,7 @@ function pathFromPublicUrl(url: string): string | null {
 export async function uploadPhoto(file: File, meta?: SaveData) {
   const uid = await getUserIdOrNull();
   const ext = safeExt(file.name);
-  const filename = `${crypto.randomUUID()}.${ext}`;
+  const filename = `${(globalThis as any).crypto?.randomUUID ? (globalThis as any).crypto.randomUUID() : Math.random().toString(36).slice(2)}.${ext}`;
   const folder = uid || "anon";
   const path = `${folder}/${filename}`;
 
@@ -86,11 +86,11 @@ export async function uploadPhoto(file: File, meta?: SaveData) {
 
 // === API ANTIGUA (compat) ===
 export async function savePhotoWithBlob(data: SaveData, file: Blob, userId?: string) {
-  // Acepta un userId opcional, pero si no hay, usa el de sesión o "anon"
   const sessionUid = await getUserIdOrNull();
   const uid = userId || sessionUid;
-  const ext = (file as any)?.name?.split(".").pop()?.toLowerCase() || safeExt("photo.jpg");
-  const filename = `${crypto.randomUUID()}.${ext}`;
+  const name = (file as any)?.name || "photo.jpg";
+  const ext = safeExt(name);
+  const filename = `${(globalThis as any).crypto?.randomUUID ? (globalThis as any).crypto.randomUUID() : Math.random().toString(36).slice(2)}.${ext}`;
   const folder = uid || "anon";
   const path = `${folder}/${filename}`;
 
@@ -146,7 +146,6 @@ export async function loadPhotoById(id: string): Promise<DBPhoto | null> {
 }
 
 export async function removePhoto(photoId: string) {
-  // Si no hay sesión, no permitimos borrar (puedes ampliar políticas si quieres)
   const uid = await getUserIdOrNull();
   if (!uid) throw new Error("Debes iniciar sesión para borrar una foto.");
 
