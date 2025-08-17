@@ -73,18 +73,18 @@ export function PhotoBlog() {
 
   // Cargar fotos guardadas en IndexedDB al montar
   useEffect(() => {
-  let mounted = true
-  ;(async () => {
-    try {
-      const loaded = await loadAllPhotos()
-      const list = Array.isArray(loaded) ? loaded : []
-      if (mounted && list.length) setPhotos(list)
-    } catch (err) {
-      console.error("loadAllPhotos failed:", err)
-    }
-  })()
-  return () => { mounted = false }
-}, [])
+    let mounted = true;
+    (async () => {
+      try {
+        const loaded = await loadAllPhotos();
+        const list = Array.isArray(loaded) ? loaded : [];
+        if (mounted && list.length) setPhotos(list);
+      } catch (err) {
+        console.error("loadAllPhotos failed:", err);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [])
 
   const filteredPhotos = useMemo(() => {
     const byCategory = selectedCategory === "all" ? photos : photos.filter((p) => p.category === selectedCategory)
@@ -318,7 +318,7 @@ export function PhotoBlog() {
                   <div className="absolute inset-0 bg-white/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                 </Button>
               </DialogTrigger>
-              <DialogContent aria-describedby={undefined} className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+              <DialogContent className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2">
                     <Star className="h-6 w-6 text-yellow-500" />
@@ -424,7 +424,7 @@ export function PhotoBlog() {
                   Subir Foto
                 </Button>
               </DialogTrigger>
-              <DialogContent aria-describedby={undefined} className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 max-w-2xl">
+              <DialogContent className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     📸 Subir Nueva Fotografía
@@ -617,7 +617,7 @@ export function PhotoBlog() {
                             onClick={() => (window.location.href = `/photos/${photo.id}`)}
                           >
                             <MessageCircle className="h-5 w-5" />
-                            <span className="font-semibold">{photo.comments.length}</span>
+                            <span className="font-semibold">{(photo.comments?.length ?? 0)}</span>
                           </Button>
 
                           <ShareButtons
@@ -890,7 +890,7 @@ export function PhotoBlog() {
           </Button>
         </DialogTrigger>
 
-        <DialogContent aria-describedby={undefined} className="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 border-2 border-pink-200">
+        <DialogContent className="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 border-2 border-pink-200">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-fuchsia-600 bg-clip-text text-transparent">
               Apoya este proyecto 💖

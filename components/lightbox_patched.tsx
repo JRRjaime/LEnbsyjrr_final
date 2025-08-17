@@ -14,6 +14,10 @@ type Props = {
   startIndex?: number
 }
 
+  if (!open || !images || images.length === 0) {
+    return null;
+  }
+
 export default function Lightbox(
   { open = false, onClose, images = [], startIndex = 0 }: Props = { open: false, images: [], startIndex: 0 },
 ) {
@@ -40,15 +44,15 @@ export default function Lightbox(
   }, [open])
 
   const next = useCallback(() => {
-    setIndex((i) => (i + 1) % images.length)
+    setIndex((i) => (i + 1) % (images?.length ?? 0))
     setZoom(1)
     setDrag({ x: 0, y: 0 })
-  }, [images.length])
+  }, [(images?.length ?? 0)])
   const prev = useCallback(() => {
-    setIndex((i) => (i - 1 + images.length) % images.length)
+    setIndex((i) => (i - 1 + (images?.length ?? 0)) % (images?.length ?? 0))
     setZoom(1)
     setDrag({ x: 0, y: 0 })
-  }, [images.length])
+  }, [(images?.length ?? 0)])
 
   // Swipe en móvil
   const touchStart = useRef<number | null>(null)
