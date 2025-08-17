@@ -1,9 +1,6 @@
--- sql/setup.sql — crea tabla `photos`, bucket `blog-images` y políticas básicas
-
--- 0) Extensiones
+-- Run this in Supabase SQL editor
 create extension if not exists "pgcrypto";
 
--- 1) Tabla principal
 create table if not exists public.photos (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
@@ -12,6 +9,7 @@ create table if not exists public.photos (
   category text not null,
   tags text[] not null default '{}',
   image_url text not null,
+  url text,
   storage_path text,
   likes int not null default 0,
   is_liked boolean not null default false,
@@ -23,44 +21,35 @@ create table if not exists public.photos (
 
 alter table public.photos enable row level security;
 
--- 2) Policies para la tabla (desarrollo sin auth)
--- ⚠️ Mientras desarrollas puedes permitir inserts/updates anónimos.
---    Cuando actives login, cambia 'anon, authenticated' por 'authenticated'.
-create policy if not exists "public read photos"
+drop policy if exists "Public read photos" on public.photos;
+create policy "Public read photos"
 on public.photos for select
 to anon, authenticated
 using (true);
 
-create policy if not exists "anon insert photos (dev)"
+drop policy if exists "anon insert photos (dev)" on public.photos;
+create policy "anon insert photos (dev)"
 on public.photos for insert
 to anon, authenticated
 with check (true);
 
-create policy if not exists "anon update photos reactions/comments (dev)"
+drop policy if exists "anon update photos reactions/comments (dev)" on public.photos;
+create policy "anon update photos reactions/comments (dev)"
 on public.photos for update
 to anon, authenticated
 using (true);
 
--- 3) Bucket de Storage (público)
+-- bucket
 select storage.create_bucket('blog-images', public := true);
 
--- 4) Policies para el bucket
-create policy if not exists "public read blog-images"
+drop policy if exists "public read blog-images" on storage.objects;
+create policy "public read blog-images"
 on storage.objects for select
 to anon, authenticated
 using (bucket_id = 'blog-images');
 
-create policy if not exists "anon upload blog-images (dev)"
+drop policy if exists "Anon upload blog-images (dev)" on storage.objects;
+create policy "Anon upload blog-images (dev)"
 on storage.objects for insert
 to anon, authenticated
 with check (bucket_id = 'blog-images');
-
-create policy if not exists "anon update blog-images (dev)"
-on storage.objects for update
-to anon, authenticated
-using (bucket_id = 'blog-images');
-
-create policy if not exists "anon delete blog-images (dev)"
-on storage.objects for delete
-to anon, authenticated
-using (bucket_id = 'blog-images');

@@ -73,27 +73,31 @@ export function PhotoBlog() {
 
   // Cargar fotos guardadas en IndexedDB al montar
   useEffect(() => {
-    let mounted = true
-    loadAllPhotos().then((loaded) => {
-      if (mounted && loaded.length) setPhotos(loaded)
-    })
-    return () => {
-      mounted = false
+  let mounted = true;
+  (async () => {
+    try {
+      const loaded = await loadAllPhotos();
+      const list = Array.isArray(loaded) ? loaded : [];
+      if (mounted && list.length) setPhotos(list);
+    } catch (err) {
+      console.error("loadAllPhotos failed:", err);
     }
-  }, [])
+  })();
+  return () => { mounted = false; };
+}, [])
 
   const filteredPhotos = useMemo(() => {
     const byCategory = selectedCategory === "all" ? photos : photos.filter((p) => p.category === selectedCategory)
     const byTags = selectedTags.length
-      ? byCategory.filter((p) => selectedTags.every((t) => p.tags.includes(t)))
-      : byCategory
+    ? byCategory.filter((p) => selectedTags.every((t) => (p.tags ?? []).includes(t)))
+    : byCategory
     const q = query.trim().toLowerCase()
     if (!q) return byTags
     return byTags.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q)),
+        (p.tags ?? []).some((t) => t.toLowerCase().includes(q)),
     )
   }, [photos, selectedCategory, query, selectedTags])
 
@@ -314,7 +318,7 @@ export function PhotoBlog() {
                   <div className="absolute inset-0 bg-white/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+              <DialogContent aria-describedby={undefined} className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2">
                     <Star className="h-6 w-6 text-yellow-500" />
@@ -420,7 +424,7 @@ export function PhotoBlog() {
                   Subir Foto
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 max-w-2xl">
+              <DialogContent aria-describedby={undefined} className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     📸 Subir Nueva Fotografía
@@ -578,7 +582,7 @@ export function PhotoBlog() {
                             <p className="text-purple-600 text-xs font-medium">Hace {photo.timestamp} ⏰</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {photo.tags.slice(0, 4).map((t) => (
+                            {(photo.tags ?? []).slice(0, 4).map((t) => (
                               <span
                                 key={t}
                                 className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200"
@@ -886,7 +890,7 @@ export function PhotoBlog() {
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 border-2 border-pink-200">
+        <DialogContent aria-describedby={undefined} className="bg-gradient-to-br from-rose-50 via-pink-50 to-fuchsia-50 border-2 border-pink-200">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-rose-600 to-fuchsia-600 bg-clip-text text-transparent">
               Apoya este proyecto 💖
